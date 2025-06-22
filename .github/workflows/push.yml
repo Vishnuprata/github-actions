@@ -42,7 +42,7 @@ jobs:
     needs: detect_apis
     if: needs.detect_apis.outputs.matrix != '[]'
     strategy:
-      max-parallel:1
+      max-parallel: 1
       matrix:
         include: ${{ fromJson(needs.detect_apis.outputs.matrix) }}
     uses: ./.github/workflows/api-deploy.yml
