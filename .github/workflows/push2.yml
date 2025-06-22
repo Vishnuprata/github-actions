@@ -1,0 +1,45 @@
+name: Push Workflow
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'commit/qa/**'
+      - 'commit/prod/**'
+
+jobs:
+  detect_api:
+    runs-on: ubuntu-latest
+    outputs:
+      env_name: ${{ steps.set-api.outputs.env_name }}
+      team_name: ${{ steps.set-api.outputs.team_name }}
+      api_name: ${{ steps.set-api.outputs.api_name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Detect first changed API
+        id: set-api
+        run: |
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^commit/' | grep -E '/(properties|service)\.yml$')
+          if [ -z "$CHANGED_FILE" ]; then
+            echo "No changed API file found."
+            exit 0
+          fi
+          ENV_NAME=$(echo "$CHANGED_FILE" | cut -d'/' -f2)
+          TEAM_NAME=$(echo "$CHANGED_FILE" | cut -d'/' -f3)
+          API_NAME=$(echo "$CHANGED_FILE" | cut -d'/' -f4)
+          echo "env_name=$ENV_NAME" >> $GITHUB_OUTPUT
+            echo "api_name=$API_NAME" >> $GITHUB_OUTPUT
+
+      - name: Deploy API
+        if: steps.set-api.outputs.api_name != ''
+        run: |
+          echo "Deploying API:"
+          echo "  Environment: ${{ steps.set-api.outputs.env_name }}"
+          echo "  Team: ${{ steps.set-api.outputs.team_name }}"
+          echo "  API: ${{ steps.set-api.outputs.api_name }}"
+        # Place your deployment commands here
