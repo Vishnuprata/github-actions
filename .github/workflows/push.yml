@@ -16,4 +16,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Fetch all history for all tags and branches
+        run: git fetch --unshallow || git fetch --all
+
+      - name: Detect changed environment folder
+        id: detect_env
+        run: |
+          CHANGED_FILE=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^commit/' | head -n 1)
+          echo "Changed file: $CHANGED_FILE"
+          ENV_NAME=$(echo "$CHANGED_FILE" | cut -d'/' -f2)
+          echo "Detected environment: $ENV_NAME"
+          echo "env_name=$ENV_NAME" >> $GITHUB_ENV
+
+      - name: Echo environment
+        run: echo "Environment folder changed: ${{ env.env_name }}"
+
       # Add additional steps here as needed
