@@ -25,9 +25,9 @@ jobs:
           # Extract the environment (qa or prod) from the path
           ENV_NAME=$(echo "$CHANGED_FILE" | cut -d'/' -f2)
           echo "Detected environment: $ENV_NAME"
-          echo "env_name=$ENV_NAME" >> $GITHUB_OUTPUT
+          echo "env_name=$ENV_NAME" >> $GITHUB_ENV
 
       - name: Echo environment
-        run: echo "Environment folder changed: ${{ steps.detect_env.outputs.env_name }}"
+        run: echo "Environment folder changed: ${{ env.env_name }}"
 
       # Add additional steps here as needed
