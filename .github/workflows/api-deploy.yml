@@ -1,0 +1,25 @@
+name: API Deploy
+
+on:
+  workflow_call:
+    inputs:
+      env_name:
+        required: true
+        type: string
+      team_name:
+        required: true
+        type: string
+      api_name:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo API info
+        run: |
+          echo "Env: ${{ inputs.env_name }}"
+          echo "Team: ${{ inputs.team_name }}"
+          echo "API: ${{ inputs.api_name }}"
+      # Add your deployment steps here
