@@ -23,7 +23,7 @@ jobs:
         id: set-matrix
         run: |
           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^commit/' | grep -E '/(properties|service)\.yml$')
-          MATRIX="[
+          MATRIX="["
           SEP=""
           for FILE in $CHANGED_FILES; do
             ENV_NAME=$(echo "$FILE" | cut -d'/' -f2)
