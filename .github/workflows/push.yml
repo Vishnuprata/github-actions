@@ -3,7 +3,7 @@ name: Push Workflow
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - 'commit/qa/**'
       - 'commit/prod/**'
@@ -28,7 +28,5 @@ jobs:
           echo "Detected environment: $ENV_NAME"
           echo "env_name=$ENV_NAME" >> $GITHUB_ENV
 
-      - name: Echo environment
-        run: echo "Environment folder changed: ${{ env.env_name }}"
 
       # Add additional steps here as needed
