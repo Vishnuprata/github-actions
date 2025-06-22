@@ -9,56 +9,45 @@ on:
       - 'commit/prod/**'
 
 jobs:
-  detect_apis:
+  build:
     runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Fetch all history for all tags and branches
-        run: git fetch --prune --tags --all
+        run: git fetch --unshallow || git fetch --all
 
-      - name: Detect changed APIs and build matrix
-        id: set-matrix
+      - name: Detect changed environment, team, and API names
+        id: detect_env
         run: |
           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^commit/' | grep -E '/(properties|service)\.yml$')
-          MATRIX="[
-          SEP=""
+          echo "Changed files: $CHANGED_FILES"
+          ENV_NAMES=()
+          TEAM_NAMES=()
+          API_NAMES=()
           for FILE in $CHANGED_FILES; do
             ENV_NAME=$(echo "$FILE" | cut -d'/' -f2)
             TEAM_NAME=$(echo "$FILE" | cut -d'/' -f3)
             API_NAME=$(echo "$FILE" | cut -d'/' -f4)
-            # Only add if API_NAME is not empty
-            if [ -n "$API_NAME" ]; then
-              MATRIX="${MATRIX}${SEP}{\"env_name\":\"$ENV_NAME\",\"team_name\":\"$TEAM_NAME\",\"api_name\":\"$API_NAME\"}"
-              SEP="," 
-            fi
+            ENV_NAMES+=("$ENV_NAME")
+            TEAM_NAMES+=("$TEAM_NAME")
+            API_NAMES+=("$API_NAME")
           done
-          MATRIX="${MATRIX}]"
-          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          # Remove duplicates and join as space-separated strings
+          ENV_NAMES_UNIQ=$(printf "%s\n" "${ENV_NAMES[@]}" | sort -u | tr '\n' ' ' | sed 's/ *$//')
+          TEAM_NAMES_UNIQ=$(printf "%s\n" "${TEAM_NAMES[@]}" | sort -u | tr '\n' ' ' | sed 's/ *$//')
+          API_NAMES_UNIQ=$(printf "%s\n" "${API_NAMES[@]}" | sort -u | tr '\n' ' ' | sed 's/ *$//')
+          echo "Detected environments: $ENV_NAMES_UNIQ"
+          echo "Detected teams: $TEAM_NAMES_UNIQ"
+          echo "Detected API names: $API_NAMES_UNIQ"
+          echo "env_names=$ENV_NAMES_UNIQ" >> $GITHUB_ENV
+          echo "team_names=$TEAM_NAMES_UNIQ" >> $GITHUB_ENV
+          echo "api_names=$API_NAMES_UNIQ" >> $GITHUB_ENV
 
-  call_api_deploy:
-    needs: detect_apis
-    runs-on: ubuntu-latest
-    if: needs.detect_apis.outputs.matrix != '[]'
-    strategy:
-      matrix:
-        include: ${{ fromJson(needs.detect_apis.outputs.matrix) }}
-    steps:
-      - name: Trigger API Deploy Workflow
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'api-deploy.yml',
-              ref: context.ref,
-              inputs: {
-                env_name: '${{ matrix.env_name }}',
-                team_name: '${{ matrix.team_name }}',
-                api_name: '${{ matrix.api_name }}'
-              }
-            })
+      - name: Echo environments, teams, and API names
+        run: |
+          echo "Environments: ${{ env.env_names }}"
+          echo "Teams: ${{ env.team_names }}"
+          echo "API names: ${{ env.api_names }}"
