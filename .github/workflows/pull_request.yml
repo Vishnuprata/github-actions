@@ -1,0 +1,33 @@
+name: Pull Request Workflow
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'commit/qa/**'
+      - 'commit/prod/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Detect changed environment folder
+        id: detect_env
+        run: |
+          # Get the list of changed files in the PR
+          CHANGED_FILE=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep '^commit/' | head -n 1)
+          echo "Changed file: $CHANGED_FILE"
+          # Extract the environment (qa or prod) from the path
+          ENV_NAME=$(echo "$CHANGED_FILE" | cut -d'/' -f2)
+          echo "Detected environment: $ENV_NAME"
+          echo "env_name=$ENV_NAME" >> $GITHUB_OUTPUT
+
+      - name: Echo environment
+        run: echo "Environment folder changed: ${{ steps.detect_env.outputs.env_name }}"
+
+      # Add additional steps here as needed

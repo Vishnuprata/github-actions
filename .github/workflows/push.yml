@@ -1,0 +1,19 @@
+name: Push Workflow
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'commit/qa/**'
+      - 'commit/prod/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Add additional steps here as needed
