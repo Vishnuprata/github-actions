@@ -19,19 +19,35 @@ jobs:
       - name: Fetch all history for all tags and branches
         run: git fetch --unshallow || git fetch --all
 
-      - name: Detect changed environment and subfolder
+      - name: Detect changed environment, team, and API names
         id: detect_env
         run: |
-          CHANGED_FILE=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^commit/' | head -n 1)
-          echo "Changed file: $CHANGED_FILE"
-          ENV_NAME=$(echo "$CHANGED_FILE" | cut -d'/' -f2)
-          FOLDER_NAME=$(echo "$CHANGED_FILE" | cut -d'/' -f3)
-          echo "Detected environment: $ENV_NAME"
-          echo "Detected folder: $FOLDER_NAME"
-          echo "env_name=$ENV_NAME" >> $GITHUB_ENV
-          echo "folder_name=$FOLDER_NAME" >> $GITHUB_ENV
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^commit/' | grep 'properties.yml')
+          echo "Changed files: $CHANGED_FILES"
+          ENV_NAMES=()
+          TEAM_NAMES=()
+          API_NAMES=()
+          for FILE in $CHANGED_FILES; do
+            ENV_NAME=$(echo "$FILE" | cut -d'/' -f2)
+            TEAM_NAME=$(echo "$FILE" | cut -d'/' -f3)
+            API_NAME=$(echo "$FILE" | cut -d'/' -f4)
+            ENV_NAMES+=("$ENV_NAME")
+            TEAM_NAMES+=("$TEAM_NAME")
+            API_NAMES+=("$API_NAME")
+          done
+          # Remove duplicates and join as space-separated strings
+          ENV_NAMES_UNIQ=$(printf "%s\n" "${ENV_NAMES[@]}" | sort -u | tr '\n' ' ' | sed 's/ *$//')
+          TEAM_NAMES_UNIQ=$(printf "%s\n" "${TEAM_NAMES[@]}" | sort -u | tr '\n' ' ' | sed 's/ *$//')
+          API_NAMES_UNIQ=$(printf "%s\n" "${API_NAMES[@]}" | sort -u | tr '\n' ' ' | sed 's/ *$//')
+          echo "Detected environments: $ENV_NAMES_UNIQ"
+          echo "Detected teams: $TEAM_NAMES_UNIQ"
+          echo "Detected API names: $API_NAMES_UNIQ"
+          echo "env_names=$ENV_NAMES_UNIQ" >> $GITHUB_ENV
+          echo "team_names=$TEAM_NAMES_UNIQ" >> $GITHUB_ENV
+          echo "api_names=$API_NAMES_UNIQ" >> $GITHUB_ENV
 
-      - name: Echo environment and folder
+      - name: Echo environments, teams, and API names
         run: |
-          echo "Environment folder changed: ${{ env.env_name }}"
-          echo "Subfolder changed: ${{ env.folder_name }}"
+          echo "Environments: ${{ env.env_names }}"
+          echo "Teams: ${{ env.team_names }}"
+          echo "API names: ${{ env.api_names }}"
