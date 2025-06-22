@@ -22,7 +22,7 @@ jobs:
       - name: Detect changed environment, team, and API names
         id: detect_env
         run: |
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^commit/' | grep 'properties.yml')
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^commit/' | grep -E '/(properties|service)\.yml$')
           echo "Changed files: $CHANGED_FILES"
           ENV_NAMES=()
           TEAM_NAMES=()
