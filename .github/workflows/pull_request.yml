@@ -19,7 +19,7 @@ jobs:
       - name: Fetch all history for all tags and branches
         run: git fetch --unshallow || git fetch --all
 
-      - name: Detect changed environment folder
+      - name: Detect changed environment and subfolder
         id: detect_env
         run: |
           # Get the list of changed files in the PR
@@ -27,5 +27,13 @@ jobs:
           echo "Changed file: $CHANGED_FILE"
           # Extract the environment (qa or prod) from the path
           ENV_NAME=$(echo "$CHANGED_FILE" | cut -d'/' -f2)
+          FOLDER_NAME=$(echo "$CHANGED_FILE" | cut -d'/' -f3)
           echo "Detected environment: $ENV_NAME"
+          echo "Detected folder: $FOLDER_NAME"
           echo "env_name=$ENV_NAME" >> $GITHUB_ENV
+          echo "folder_name=$FOLDER_NAME" >> $GITHUB_ENV
+
+      - name: Echo environment and folder
+        run: |
+          echo "Environment folder changed: ${{ env.env_name }}"
+          echo "Subfolder changed: ${{ env.folder_name }}"
