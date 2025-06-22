@@ -19,14 +19,19 @@ jobs:
       - name: Fetch all history for all tags and branches
         run: git fetch --unshallow || git fetch --all
 
-      - name: Detect changed environment folder
+      - name: Detect changed environment and subfolder
         id: detect_env
         run: |
           CHANGED_FILE=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^commit/' | head -n 1)
           echo "Changed file: $CHANGED_FILE"
           ENV_NAME=$(echo "$CHANGED_FILE" | cut -d'/' -f2)
+          FOLDER_NAME=$(echo "$CHANGED_FILE" | cut -d'/' -f3)
           echo "Detected environment: $ENV_NAME"
+          echo "Detected folder: $FOLDER_NAME"
           echo "env_name=$ENV_NAME" >> $GITHUB_ENV
+          echo "folder_name=$FOLDER_NAME" >> $GITHUB_ENV
 
-
-      # Add additional steps here as needed
+      - name: Echo environment and folder
+        run: |
+          echo "Environment folder changed: ${{ env.env_name }}"
+          echo "Subfolder changed: ${{ env.folder_name }}"
