@@ -1,4 +1,4 @@
-name: Push Workflow
+name: Push Workflow alternsate
 
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
       - name: Detect first changed API
         id: set-api
         run: |
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^commit/' | grep -E '/(properties|service)\.yml$')
+          CHANGED_FILE=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^commit/' | grep -E '/(properties|service)\.yml$' | head -n 1)
           if [ -z "$CHANGED_FILE" ]; then
             echo "No changed API file found."
             exit 0
@@ -33,7 +33,8 @@ jobs:
           TEAM_NAME=$(echo "$CHANGED_FILE" | cut -d'/' -f3)
           API_NAME=$(echo "$CHANGED_FILE" | cut -d'/' -f4)
           echo "env_name=$ENV_NAME" >> $GITHUB_OUTPUT
-            echo "api_name=$API_NAME" >> $GITHUB_OUTPUT
+          echo "team_name=$TEAM_NAME" >> $GITHUB_OUTPUT
+          echo "api_name=$API_NAME" >> $GITHUB_OUTPUT
 
       - name: Deploy API
         if: steps.set-api.outputs.api_name != ''
